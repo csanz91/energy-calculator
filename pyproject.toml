@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "energy-calculator"
+version = "0.1.0"
+description = "Simple tool to compare the energy cost for different tariffs, using the energy distributors csv standard file."
+authors = ["csanz91 <cesarsanz.91@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+holidays-es = "^1.0.1"
+pandas = "^1.3.5"
+requests = "^2.26.0"
+bs4 = "^0.0.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = {version = "^21.12b0", allow-prereleases = true}
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
