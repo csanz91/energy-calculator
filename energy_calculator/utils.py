@@ -12,17 +12,21 @@ class DataConsumption:
     consumption_p3: float  # kWh
     num_days: int
 
-    def get_total_consumption(self) -> float:
+    @property
+    def total_consumption(self) -> float:
         return self.consumption_p1 + self.consumption_p2 + self.consumption_p3
 
-    def get_p1_distribution(self):
-        return self.consumption_p1 / self.get_total_consumption() * 100.0
+    @property
+    def p1_distribution(self) -> float:
+        return self.consumption_p1 / self.total_consumption * 100.0
 
-    def get_p2_distribution(self):
-        return self.consumption_p2 / self.get_total_consumption() * 100.0
+    @property
+    def p2_distribution(self) -> float:
+        return self.consumption_p2 / self.total_consumption * 100.0
 
-    def get_p3_distribution(self):
-        return self.consumption_p3 / self.get_total_consumption() * 100.0
+    @property
+    def p3_distribution(self) -> float:
+        return self.consumption_p3 / self.total_consumption * 100.0
 
 
 @dataclass(frozen=True)
@@ -102,6 +106,6 @@ def get_periods_consumption(file_path: str) -> DataConsumption:
     )
 
     # Make sure we have divided the different consumption periods correctly
-    assert math.isclose(data.get_total_consumption(), df.AE_kWh.sum())
+    assert math.isclose(data.total_consumption, df.AE_kWh.sum())
 
     return data

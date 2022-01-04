@@ -8,9 +8,10 @@ file_path = "./data/test_weekend.csv"
 consumption_data = get_periods_consumption(file_path)
 
 # Print the consumption distribution
-print(f"Period 1 distribution: {consumption_data.get_p1_distribution():.1f} %")
-print(f"Period 2 distribution: {consumption_data.get_p2_distribution():.1f} %")
-print(f"Period 3 distribution: {consumption_data.get_p3_distribution():.1f} %")
+print(f"Period 1 distribution: {consumption_data.p1_distribution:.1f} %")
+print(f"Period 2 distribution: {consumption_data.p2_distribution:.1f} %")
+print(f"Period 3 distribution: {consumption_data.p3_distribution:.1f} %")
+print(f"Total consumption: {consumption_data.total_consumption:.1f} kWh")
 
 # Get a list with the energy costs for each tariff
 tariffs_costs = [

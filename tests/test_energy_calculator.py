@@ -34,13 +34,13 @@ class TestHolidayEnergyData(unittest.TestCase):
         self.assertAlmostEqual(self.consumption_data.consumption_p3, ALL_DAY_CONS)
 
     def test_p1_distribution(self):
-        self.assertEqual(self.consumption_data.get_p1_distribution(), 0.0)
+        self.assertEqual(self.consumption_data.p1_distribution, 0.0)
 
     def test_p2_distribution(self):
-        self.assertEqual(self.consumption_data.get_p2_distribution(), 0.0)
+        self.assertEqual(self.consumption_data.p2_distribution, 0.0)
 
     def test_p3_distribution(self):
-        self.assertEqual(self.consumption_data.get_p3_distribution(), 100.0)
+        self.assertEqual(self.consumption_data.p3_distribution, 100.0)
 
 
 class TestWeekendEnergyData(unittest.TestCase):
@@ -57,13 +57,13 @@ class TestWeekendEnergyData(unittest.TestCase):
         self.assertAlmostEqual(self.consumption_data.consumption_p3, ALL_DAY_CONS)
 
     def test_p1_distribution(self):
-        self.assertEqual(self.consumption_data.get_p1_distribution(), 0.0)
+        self.assertEqual(self.consumption_data.p1_distribution, 0.0)
 
     def test_p2_distribution(self):
-        self.assertEqual(self.consumption_data.get_p2_distribution(), 0.0)
+        self.assertEqual(self.consumption_data.p2_distribution, 0.0)
 
     def test_p3_distribution(self):
-        self.assertEqual(self.consumption_data.get_p3_distribution(), 100.0)
+        self.assertEqual(self.consumption_data.p3_distribution, 100.0)
 
 
 class TestWeekdayEnergyData(unittest.TestCase):
@@ -81,15 +81,15 @@ class TestWeekdayEnergyData(unittest.TestCase):
 
     def test_p1_distribution(self):
         per = P1_TEST_CONS / ALL_DAY_CONS * 100
-        self.assertAlmostEqual(self.consumption_data.get_p1_distribution(), per)
+        self.assertAlmostEqual(self.consumption_data.p1_distribution, per)
 
     def test_p2_distribution(self):
         per = P2_TEST_CONS / ALL_DAY_CONS * 100
-        self.assertAlmostEqual(self.consumption_data.get_p2_distribution(), per)
+        self.assertAlmostEqual(self.consumption_data.p2_distribution, per)
 
     def test_p3_distribution(self):
         per = P3_TEST_CONS / ALL_DAY_CONS * 100
-        self.assertAlmostEqual(self.consumption_data.get_p3_distribution(), per)
+        self.assertAlmostEqual(self.consumption_data.p3_distribution, per)
 
 
 class TestHolidayEnergyCost(unittest.TestCase):
