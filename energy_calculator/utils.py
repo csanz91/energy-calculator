@@ -1,8 +1,19 @@
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
-from holidays_es import Province
 import pandas as pd
+from holidays_es import Province
+
+
+def get_rd_10_prices(excelFile) -> pd.DataFrame:
+    return pd.read_excel(
+        excelFile, sheet_name="PGN_RD_10_2022", names=["date", "price"], index_col=0
+    )
+
+
+def get_rd_10_mean_price(rd10Prices):
+    # Get the mean of the last 30 days
+    return rd10Prices.iloc[:30].price.mean() / 1000.0
 
 
 @dataclass(frozen=True)
@@ -29,6 +40,38 @@ class DataConsumption:
         return self.consumption_p3 / self.total_consumption * 100.0
 
 
+@dataclass()
+class ElectricityCost:
+    energy_cost: float  # €/kWh
+    power_cost: float  # €/kWh
+    rd_10_cost: float  # €/kWh
+    tax_base: float = 0.0  # €
+    electricity_cost_tax: float = 0.0  # €
+    tax: float = 0.0  # €
+    total_cost: float = 0.0  # €
+
+    def __post_init__(self):
+        ELECTRICITY_TAX = 0.5  # %
+        GENERAL_TAX = 5.0  # %
+        ENERGY_MONITOR_COST_PER_DAY = 0.02663  # %
+
+        electricity_cost = self.cost_without_taxes
+        energy_monitor_cost = 366 * ENERGY_MONITOR_COST_PER_DAY
+        self.electricity_cost_tax = electricity_cost * ELECTRICITY_TAX / 100.0
+        self.tax_base = (
+            electricity_cost + self.electricity_cost_tax + energy_monitor_cost
+        )
+        self.tax = self.tax_base * GENERAL_TAX / 100.0
+        self.total_cost = self.tax_base + self.tax
+
+    @property
+    def cost_without_taxes(self) -> float:
+        return self.energy_cost + self.power_cost + self.rd_10_cost
+
+    def __str__(self) -> str:
+        return f"""Energy cost: {self.energy_cost:.2f} € \nPower cost: {self.power_cost:.2f} € \nRD10 cost: {self.rd_10_cost:.2f} € \nEnergy cost: {self.energy_cost:.2f} € \nTotal cost: {self.total_cost:.2f} €"""
+
+
 @dataclass(frozen=True)
 class TariffData:
     name: str
@@ -37,16 +80,35 @@ class TariffData:
     energy_cost_p3: float  # €/kWh
     power_cost_p1: float  # €/kW/day
     power_cost_p2: float  # €/kW/day
+    rd_10_included: bool  # The tarrif includes the RD 10 2022 into the prices
 
-    def calculate_energy_cost(
-        self, consumption: DataConsumption, contracted_p1: float, contracted_p2: float
-    ) -> float:
-        return (
+    def calculate_electricity_cost(
+        self,
+        consumption: DataConsumption,
+        contracted_p1: float,
+        contracted_p2: float,
+        rd_10_mean_price: float,
+    ) -> ElectricityCost:
+
+        power_cost = consumption.num_days * (
+            self.power_cost_p1 * contracted_p1 + self.power_cost_p2 * contracted_p2
+        )
+
+        energy_cost = (
             consumption.consumption_p1 * self.energy_cost_p1
             + consumption.consumption_p2 * self.energy_cost_p2
             + consumption.consumption_p3 * self.energy_cost_p3
-            + consumption.num_days
-            * (self.power_cost_p1 * contracted_p1 + self.power_cost_p2 * contracted_p2)
+        )
+
+        if self.rd_10_included:
+            rd_10_cost = 0.0
+        else:
+            rd_10_cost = consumption.total_consumption * rd_10_mean_price
+
+        return ElectricityCost(
+            energy_cost=energy_cost,
+            power_cost=power_cost,
+            rd_10_cost=rd_10_cost,
         )
 
 
@@ -75,12 +137,16 @@ def get_periods_consumption(file_path: str) -> DataConsumption:
     # Make the hours start from 0
     df.Hora = df.Hora - 1
 
+    energyColumn = "Consumo_kWh"
+    if energyColumn not in df.columns:
+        energyColumn = "AE_kWh"
+
     # P1 consumption: from 10:00 to 14:00 and from 18:00 to 22:00
     consumption_p1 = df.loc[
         ~df.weekend
         & ~df.holiday
         & ((df.Hora >= 10) & (df.Hora < 14) | (df.Hora >= 18) & (df.Hora < 22))
-    ].AE_kWh.sum()
+    ][energyColumn].sum()
 
     # P2 consumption: from 08:00 to 10:00, from 14:00 to 18:00 and from 22:00 to 24:00
     consumption_p2 = df.loc[
@@ -91,12 +157,12 @@ def get_periods_consumption(file_path: str) -> DataConsumption:
             | (df.Hora >= 14) & (df.Hora < 18)
             | (df.Hora >= 22) & (df.Hora < 24)
         )
-    ].AE_kWh.sum()
+    ][energyColumn].sum()
 
     # P3 consumption: from 00:00 to 08:00, weekend days and holidays
-    consumption_p3 = df.loc[
-        df.weekend | df.holiday | (df.Hora >= 0) & (df.Hora < 8)
-    ].AE_kWh.sum()
+    consumption_p3 = df.loc[df.weekend | df.holiday | (df.Hora >= 0) & (df.Hora < 8)][
+        energyColumn
+    ].sum()
 
     data = DataConsumption(
         consumption_p1=consumption_p1,
@@ -106,6 +172,6 @@ def get_periods_consumption(file_path: str) -> DataConsumption:
     )
 
     # Make sure we have divided the different consumption periods correctly
-    assert math.isclose(data.total_consumption, df.AE_kWh.sum())
+    assert math.isclose(data.total_consumption, df[energyColumn].sum())
 
     return data

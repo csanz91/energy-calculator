@@ -1,6 +1,11 @@
 import unittest
 
-from energy_calculator.utils import get_periods_consumption, TariffData
+from energy_calculator.utils import (
+    get_periods_consumption,
+    TariffData,
+    get_rd_10_prices,
+    get_rd_10_mean_price,
+)
 
 P1_TEST_CONS = 21.2
 P2_TEST_CONS = 20.2
@@ -17,6 +22,17 @@ TARIFF = TariffData(
     energy_cost_p3=0.1,
     power_cost_p1=0.1,
     power_cost_p2=0.05,
+    rd_10_included=True,
+)
+
+TARIFF_RD10 = TariffData(
+    name="Tariff RD",
+    energy_cost_p1=0.3,
+    energy_cost_p2=0.2,
+    energy_cost_p3=0.1,
+    power_cost_p1=0.1,
+    power_cost_p2=0.05,
+    rd_10_included=False,
 )
 
 
@@ -95,51 +111,96 @@ class TestWeekdayEnergyData(unittest.TestCase):
 class TestHolidayEnergyCost(unittest.TestCase):
     def setUp(self) -> None:
         self.consumption_data = get_periods_consumption("./data/test_holiday.csv")
+        self.meanRD10Price = 0.0
 
     def test_energy_cost(self):
-        energy_cost = TARIFF.calculate_energy_cost(
-            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2
+        energy_cost = TARIFF.calculate_electricity_cost(
+            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2, self.meanRD10Price
         )
 
-        self.assertEqual(
-            energy_cost,
-            ALL_DAY_CONS * TARIFF.energy_cost_p3
-            + CONTRACTED_P1 * TARIFF.power_cost_p1
-            + CONTRACTED_P2 * TARIFF.power_cost_p2
+        self.assertAlmostEqual(
+            energy_cost.energy_cost, ALL_DAY_CONS * TARIFF.energy_cost_p3
+        )
+        self.assertAlmostEqual(
+            energy_cost.power_cost,
+            CONTRACTED_P1 * TARIFF.power_cost_p1 + CONTRACTED_P2 * TARIFF.power_cost_p2,
         )
 
 
 class TestWeekendEnergyCost(unittest.TestCase):
     def setUp(self) -> None:
         self.consumption_data = get_periods_consumption("./data/test_weekend.csv")
+        self.meanRD10Price = 0.0
 
     def test_energy_cost(self):
-        energy_cost = TARIFF.calculate_energy_cost(
-            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2
+        energy_cost = TARIFF.calculate_electricity_cost(
+            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2, self.meanRD10Price
         )
 
-        self.assertEqual(
-            energy_cost,
-            ALL_DAY_CONS * TARIFF.energy_cost_p3
-            + CONTRACTED_P1 * TARIFF.power_cost_p1
-            + CONTRACTED_P2 * TARIFF.power_cost_p2,
+        self.assertAlmostEqual(
+            energy_cost.energy_cost, ALL_DAY_CONS * TARIFF.energy_cost_p3
+        )
+        self.assertAlmostEqual(
+            energy_cost.power_cost,
+            CONTRACTED_P1 * TARIFF.power_cost_p1 + CONTRACTED_P2 * TARIFF.power_cost_p2,
         )
 
 
 class TestWeekdayEnergyCost(unittest.TestCase):
     def setUp(self) -> None:
         self.consumption_data = get_periods_consumption("./data/test_weekday.csv")
+        self.meanRD10Price = 0.0
 
     def test_energy_cost(self):
-        energy_cost = TARIFF.calculate_energy_cost(
-            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2
+        energy_cost = TARIFF.calculate_electricity_cost(
+            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2, self.meanRD10Price
         )
 
         self.assertAlmostEqual(
-            energy_cost,
+            energy_cost.energy_cost,
             P1_TEST_CONS * TARIFF.energy_cost_p1
             + P2_TEST_CONS * TARIFF.energy_cost_p2
-            + P3_TEST_CONS * TARIFF.energy_cost_p3
-            + CONTRACTED_P1 * TARIFF.power_cost_p1
-            + CONTRACTED_P2 * TARIFF.power_cost_p2,
+            + P3_TEST_CONS * TARIFF.energy_cost_p3,
+        )
+        self.assertAlmostEqual(
+            energy_cost.power_cost,
+            CONTRACTED_P1 * TARIFF.power_cost_p1 + CONTRACTED_P2 * TARIFF.power_cost_p2,
+        )
+
+
+class TestGetRD10PricesData(unittest.TestCase):
+    def setUp(self) -> None:
+        self.rd10Prices = get_rd_10_prices("./data/test_RD10.xlsx")
+
+    def test_get_mean_price(self):
+        meanRD10Price = get_rd_10_mean_price(self.rd10Prices)
+        self.assertAlmostEqual(0.1685643, meanRD10Price)
+
+
+class TestWeekdayEnergyCostRD10(unittest.TestCase):
+    def setUp(self) -> None:
+        self.consumption_data = get_periods_consumption("./data/test_weekday.csv")
+        self.rd10Prices = get_rd_10_prices("./data/test_RD10.xlsx")
+        self.meanRD10Price = get_rd_10_mean_price(self.rd10Prices)
+
+    def test_energy_cost(self):
+
+        energy_cost = TARIFF_RD10.calculate_electricity_cost(
+            self.consumption_data, CONTRACTED_P1, CONTRACTED_P2, self.meanRD10Price
+        )
+
+        self.assertAlmostEqual(
+            energy_cost.energy_cost,
+            P1_TEST_CONS * TARIFF.energy_cost_p1
+            + P2_TEST_CONS * TARIFF.energy_cost_p2
+            + P3_TEST_CONS * TARIFF.energy_cost_p3,
+        )
+        self.assertAlmostEqual(
+            energy_cost.power_cost,
+            CONTRACTED_P1 * TARIFF.power_cost_p1 + CONTRACTED_P2 * TARIFF.power_cost_p2,
+        )
+
+        self.assertAlmostEqual(
+            energy_cost.rd_10_cost,
+            (P1_TEST_CONS + P2_TEST_CONS + P3_TEST_CONS) * self.meanRD10Price,
         )
