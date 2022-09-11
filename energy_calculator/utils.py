@@ -11,9 +11,9 @@ def get_rd_10_prices(excelFile) -> pd.DataFrame:
     )
 
 
-def get_rd_10_mean_price(rd10Prices):
+def get_rd_10_mean_price(rd_10_prices):
     # Get the mean of the last 30 days
-    return rd10Prices.iloc[:30].price.mean() / 1000.0
+    return rd_10_prices.iloc[:30].price.mean() / 1000.0
 
 
 @dataclass(frozen=True)
