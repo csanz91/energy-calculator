@@ -123,7 +123,11 @@ class TestHolidayEnergyCost(unittest.TestCase):
         )
         self.assertAlmostEqual(
             energy_cost.power_cost,
-            CONTRACTED_P1 * TARIFF.power_cost_p1 + CONTRACTED_P2 * TARIFF.power_cost_p2,
+            (
+                CONTRACTED_P1 * TARIFF.power_cost_p1
+                + CONTRACTED_P2 * TARIFF.power_cost_p2
+            )
+            * self.consumption_data.num_days,
         )
 
 

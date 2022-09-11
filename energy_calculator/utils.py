@@ -126,13 +126,19 @@ def get_periods_consumption(file_path: str) -> DataConsumption:
     df.Fecha = pd.to_datetime(df.Fecha, format="%d/%m/%Y")
 
     # Get the National Holidays
-    year = df.Fecha.iloc[0].year
-    national_holidays = Province(name="madrid", year=year).national_holidays()
+    df["year"] = pd.DatetimeIndex(df.Fecha).year
+    years = df.year.unique()
+    holidays = {}
+    for year in years:
+        year_holidays = Province(name="madrid", year=year)
+        holidays[year] = year_holidays.national_holidays()
 
     # Create a new column indicating if the day is a weekend day or not
     df["weekend"] = df.Fecha.dt.dayofweek // 5 == 1
     # Create a new column indicating if the day was a holiday day or not
-    df["holiday"] = df.Fecha.isin(national_holidays)
+    df["holiday"] = df.apply(
+        lambda row: row.Fecha.date() in holidays[row.year], axis=1
+    )
 
     # Make the hours start from 0
     df.Hora = df.Hora - 1
