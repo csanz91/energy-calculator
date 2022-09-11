@@ -5,9 +5,9 @@ import pandas as pd
 from holidays_es import Province
 
 
-def get_rd_10_prices(excelFile) -> pd.DataFrame:
+def get_rd_10_prices(excel_path) -> pd.DataFrame:
     return pd.read_excel(
-        excelFile, sheet_name="PGN_RD_10_2022", names=["date", "price"], index_col=0
+        excel_path, sheet_name="PGN_RD_10_2022", names=["date", "price"], index_col=0
     )
 
 

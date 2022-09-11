@@ -7,9 +7,9 @@ def main():
     contracted_p1 = 3.0  # kW
     contracted_p2 = 3.0  # kW
 
-    rd_10_prices_file = "./data/MIBGAS_Data_2022.xlsx"
+    rd_10_prices_url = "https://www.mibgas.es/es/file-access/MIBGAS_Data_2022.xlsx?path=AGNO_2022/XLS"
 
-    rd_10_prices = get_rd_10_prices(rd_10_prices_file)
+    rd_10_prices = get_rd_10_prices(rd_10_prices_url)
     rd_10_mean_price = get_rd_10_mean_price(rd_10_prices)
     print(f"RD10 mean price: {rd_10_mean_price:.4f} €/kWh \n")
 
