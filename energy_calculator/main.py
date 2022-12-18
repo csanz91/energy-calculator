@@ -18,8 +18,11 @@ def main():
 
     # Print the consumption distribution
     print(f"Period 1 distribution: {consumption_data.p1_distribution:.1f} %")
+    print(f"Period 1 consumtion: {consumption_data.consumption_p1:.1f} kWh")
     print(f"Period 2 distribution: {consumption_data.p2_distribution:.1f} %")
+    print(f"Period 2 consumtion: {consumption_data.consumption_p2:.1f} kWh")
     print(f"Period 3 distribution: {consumption_data.p3_distribution:.1f} %")
+    print(f"Period 3 consumtion: {consumption_data.consumption_p3:.1f} kWh")
     print(f"Total consumption: {consumption_data.total_consumption:.1f} kWh\n")
 
     # Get a list with the energy costs for each tariff
