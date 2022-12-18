@@ -38,8 +38,10 @@ def main():
     # Order the tarifs by energy cost
     tariffs_costs.sort(key=lambda x: x[1])
     # Print the results ordered by energy cost
+    bestTariffCost = tariffs_costs[0][1]
     for tariff_name, tariff_cost in tariffs_costs:
-        print(f"{tariff_name} energy cost: {tariff_cost:.2f} €")
+        tariffCostDiff = tariff_cost - bestTariffCost
+        print(f"{tariff_name} energy cost: {tariff_cost:.2f}€ (+{tariffCostDiff:.2f}€)")
 
     # Get the best tariffs with the RD10 included and not included
     best_rd_tariff = None
