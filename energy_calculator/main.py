@@ -57,7 +57,7 @@ def main():
         if best_rd_tariff and best_non_rd_tariff:
             break
 
-    assert best_rd_tariff and best_non_rd_tariff
+    if best_rd_tariff and best_non_rd_tariff:
 
     # Get the cost of the best tariffs
     best_rd_10_tariff_cost = best_rd_tariff.calculate_electricity_cost(
