@@ -1,10 +1,39 @@
-import math
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from hashlib import sha1
+import math
+import os
+import pickle
 
-import pandas as pd
 from holidays_es import Province
+import pandas as pd
 
 
+def disk_cache(func):
+    cache_dir = "cache"
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+
+    def wrapper(*args, **kwargs):
+        cache_key = sha1(
+                (str(func.__module__) + str(func.__name__) + str(args) + str(kwargs)).encode(
+                    "utf-8"
+                )
+            ).hexdigest()
+        cache_path = os.path.join(cache_dir, cache_key)
+        if os.path.exists(cache_path):
+            modification_time = datetime.fromtimestamp(os.path.getmtime(cache_path))
+            if modification_time > datetime.now() - timedelta(days=1):
+                with open(cache_path, "rb") as f:
+                    return pickle.load(f)
+        result = func(*args, **kwargs)
+        with open(cache_path, "wb") as f:
+            pickle.dump(result, f)
+        return result
+
+    return wrapper
+
+@disk_cache
 def get_rd_10_prices(excel_path) -> pd.DataFrame:
     return pd.read_excel(
         excel_path, sheet_name="PGN_RD_10_2022", names=["date", "price"], index_col=0
