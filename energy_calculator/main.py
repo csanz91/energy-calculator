@@ -41,7 +41,7 @@ def main():
     bestTariffCost = tariffs_costs[0][1]
     for tariff_name, tariff_cost in tariffs_costs:
         tariffCostDiff = tariff_cost - bestTariffCost
-        print(f"{tariff_name} energy cost: {tariff_cost:.2f}€ (+{tariffCostDiff:.2f}€)")
+        print(f"{tariff_name}: {tariff_cost:.2f}€ (+{tariffCostDiff:.2f}€)")
 
     # Get the best tariffs with the RD10 included and not included
     best_rd_tariff = None
