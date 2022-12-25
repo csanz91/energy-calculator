@@ -74,6 +74,8 @@ class ElectricityCost:
     energy_cost: float  # €/kWh
     power_cost: float  # €/kWh
     rd_10_cost: float  # €/kWh
+    energy_monitor_cost: float  # €/kWh
+    social_bonus_cost: float  # €/kWh
     tax_base: float = 0.0  # €
     electricity_cost_tax: float = 0.0  # €
     tax: float = 0.0  # €
@@ -82,20 +84,24 @@ class ElectricityCost:
     def __post_init__(self):
         ELECTRICITY_TAX = 0.5  # %
         GENERAL_TAX = 5.0  # %
-        ENERGY_MONITOR_COST_PER_DAY = 0.02663  # %
 
         electricity_cost = self.cost_without_taxes
-        energy_monitor_cost = 366 * ENERGY_MONITOR_COST_PER_DAY
+
         self.electricity_cost_tax = electricity_cost * ELECTRICITY_TAX / 100.0
         self.tax_base = (
-            electricity_cost + self.electricity_cost_tax + energy_monitor_cost
+            electricity_cost + self.electricity_cost_tax + self.energy_monitor_cost
         )
         self.tax = self.tax_base * GENERAL_TAX / 100.0
         self.total_cost = self.tax_base + self.tax
 
     @property
     def cost_without_taxes(self) -> float:
-        return self.energy_cost + self.power_cost + self.rd_10_cost
+        return (
+            self.energy_cost
+            + self.power_cost
+            + self.rd_10_cost
+            + self.social_bonus_cost
+        )
 
     def __str__(self) -> str:
         return f"""Energy cost: {self.energy_cost:.2f} € \nPower cost: {self.power_cost:.2f} € \nRD10 cost: {self.rd_10_cost:.2f} € \nEnergy cost: {self.energy_cost:.2f} € \nTotal cost: {self.total_cost:.2f} €"""
@@ -119,6 +125,12 @@ class TariffData:
         rd_10_mean_price: float,
     ) -> ElectricityCost:
 
+        ENERGY_MONITOR_COST_PER_DAY = 0.02663  # €
+        SOCIAL_BONUS_COST_PER_DAY = 0.036718  # €
+
+        energy_monitor_cost = consumption.num_days * ENERGY_MONITOR_COST_PER_DAY
+        social_bonus_cost = consumption.num_days * SOCIAL_BONUS_COST_PER_DAY
+
         power_cost = consumption.num_days * (
             self.power_cost_p1 * contracted_p1 + self.power_cost_p2 * contracted_p2
         )
@@ -138,6 +150,8 @@ class TariffData:
             energy_cost=energy_cost,
             power_cost=power_cost,
             rd_10_cost=rd_10_cost,
+            energy_monitor_cost=energy_monitor_cost,
+            social_bonus_cost=social_bonus_cost,
         )
 
 
@@ -165,9 +179,7 @@ def get_periods_consumption(file_path: str) -> DataConsumption:
     # Create a new column indicating if the day is a weekend day or not
     df["weekend"] = df.Fecha.dt.dayofweek // 5 == 1
     # Create a new column indicating if the day was a holiday day or not
-    df["holiday"] = df.apply(
-        lambda row: row.Fecha.date() in holidays[row.year], axis=1
-    )
+    df["holiday"] = df.apply(lambda row: row.Fecha.date() in holidays[row.year], axis=1)
 
     # Make the hours start from 0
     df.Hora = df.Hora - 1
